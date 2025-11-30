@@ -163,3 +163,200 @@ Example endpoints used by models:
 
 ---
 
+# FastAPI – Deep Introduction (Video 2 Notes)
+
+## 1. Recap of Previous Video
+
+In the last session, we learned:
+
+* What an API is
+* Why APIs are required
+* Why learning FastAPI is important for Data Science, Machine Learning, and AI students
+
+## 2. What is FastAPI?
+
+FastAPI is a modern, high-performance web framework for building APIs using Python.
+
+**One-line definition:**
+FastAPI is a Python framework that allows you to build industrial-grade, fast, and scalable APIs with minimal code.
+
+### Why FastAPI is powerful
+
+* Extremely fast (comparable to Node.js and Go)
+* Easy to write and understand
+* Used heavily in ML model deployment
+
+## 3. FastAPI Internals – What is it built on?
+
+FastAPI is built using two key Python libraries:
+
+| Library   | What it does                                     |
+| --------- | ------------------------------------------------ |
+| Starlette | Handles HTTP requests, routing, response sending |
+| Pydantic  | Performs data validation and type checking       |
+
+**Meaning:**
+
+* **Starlette** = receives HTTP request and sends HTTP response
+* **Pydantic** = checks if the input data is valid (correct type, format, etc.)
+
+So, **FastAPI = Starlette (request handling) + Pydantic (validation)**
+
+## 4. Why do we need data validation?
+
+APIs accept data from users, which might be:
+
+* Wrong format
+* Wrong datatype
+* Invalid or missing
+
+Without validation, your system may crash.
+**Pydantic** automatically validates input data, saving developers a lot of effort.
+
+**Example:** If API expects a string `station name`, Pydantic ensures it is not a number or empty value.
+
+## 5. Core Philosophies of FastAPI
+
+### Philosophy 1 – Fast to Run
+
+FastAPI APIs are extremely fast due to:
+
+| Component         | Old Frameworks        | FastAPI                      |
+| ----------------- | --------------------- | ---------------------------- |
+| Gateway Interface | WSGI (synchronous)    | ASGI (asynchronous)          |
+| Server            | Gunicorn              | Uvicorn                      |
+| Execution         | One request at a time | Multiple concurrent requests |
+
+**Why ASGI makes FastAPI faster**
+
+* ASGI supports async/await
+* Multiple requests can be processed in parallel
+* No blocking waits
+
+### Philosophy 2 – Fast to Code
+
+FastAPI reduces development time because:
+
+* **Automatic Input Validation** using Pydantic
+* No extra code for checking datatypes
+* **Auto-Generated Documentation** at `/docs` and `/redoc`
+
+**Modern Library Support**
+Works smoothly with:
+
+* Scikit-Learn, TensorFlow, PyTorch (ML)
+* SQLAlchemy (database)
+* OAuth (authentication)
+* Docker & Kubernetes (deployment)
+
+## 6. Understanding WSGI vs ASGI
+
+| Feature     | WSGI (Flask)         | ASGI (FastAPI)         |
+| ----------- | -------------------- | ---------------------- |
+| Nature      | Synchronous          | Asynchronous           |
+| Requests    | One at a time        | Many at once           |
+| Performance | Slower               | Faster                 |
+| Use Case    | Traditional web apps | Real-time & ML systems |
+
+**Summary:**
+
+* **Flask** = Waiter who handles one order at a time
+* **FastAPI** = Waiter who takes multiple orders and processes efficiently
+
+## 7. How does an API work internally?
+
+```
+Client (browser/Postman)
+↓ sends HTTP request
+Web Server
+↓
+Gateway Interface (WSGI/ASGI)
+↓ converts request format
+API Code (Python)
+↓ executes business logic / ML model
+Response → Client
+```
+
+ASGI enables non-blocking processing, leading to speed and scalability.
+
+## 8. Installing FastAPI and Uvicorn
+
+```
+python -m venv myenv
+myenv\Scripts\activate
+pip install fastapi uvicorn pydantic
+```
+
+**Uvicorn** = server that runs FastAPI apps
+
+## 9. Writing Your First FastAPI App
+
+```python
+from fastapi import FastAPI
+app = FastAPI()
+
+@app.get("/")
+def home():
+    return {"message": "Hello World"}
+```
+
+Run using:
+
+```
+uvicorn main:app --reload
+```
+
+Visit:
+
+```
+http://127.0.0.1:8000
+```
+
+Response:
+
+```
+{"message": "Hello World"}
+```
+
+## 10. Creating Another Endpoint
+
+```python
+@app.get("/about")
+def about():
+    return {"message": "CampusX is an education platform to learn AI"}
+```
+
+Visit:
+
+```
+/about
+```
+
+## 11. Auto-Documentation
+
+FastAPI generates interactive docs automatically.
+Open:
+
+```
+http://127.0.0.1:8000/docs
+```
+
+You can:
+
+* View API endpoints
+* Test them
+* Send requests without Postman
+
+This makes API testing incredibly easy.
+
+## 12. Summary of Video 2
+
+You learned:
+✔️ What FastAPI is
+✔️ How it is built internally
+✔️ Why FastAPI is faster than Flask
+✔️ What ASGI and Uvicorn are
+✔️ Why FastAPI reduces coding effort
+✔️ How to install and build your first FastAPI API
+✔️ How auto-documentation works
+
