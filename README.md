@@ -360,3 +360,134 @@ You learned:
 ✔️ How to install and build your first FastAPI API
 ✔️ How auto-documentation works
 
+
+# FastAPI – Video 3 Notes (Simple English)
+
+## 1. Project Begins
+
+In the previous videos, we learned what APIs are and got an introduction to FastAPI. From this video onwards, we start building a real project using FastAPI.
+
+## 2. Project Overview
+
+### Problem
+
+Doctors give handwritten prescriptions on paper. Patients must carry these papers during every visit, which leads to issues:
+
+* Papers can get lost
+* Records can be misplaced
+* Hard to maintain for years
+
+### Solution Idea
+
+Create a digital Patient Management System where:
+
+* Doctor has an app
+* They can create a profile for every patient
+* Patient details like name, age, city, height, weight, and BMI are stored online
+
+## 3. What Will Our API Do?
+
+We will not build the frontend app, only the backend API.
+
+### Features of our API:
+
+| Operation       | What it does                     |
+| --------------- | -------------------------------- |
+| Create          | Add a new patient record         |
+| Retrieve (View) | See all patient details          |
+| Retrieve single | View one patient’s data using ID |
+| Update          | Modify patient data              |
+| Delete          | Remove patient from system       |
+
+Data will be stored temporarily in a `patients.json` file instead of a database.
+
+## 4. CRUD Operations
+
+Every dynamic software performs four actions:
+
+| Name | Full Form | Meaning              |
+| ---- | --------- | -------------------- |
+| C    | Create    | Add something new    |
+| R    | Retrieve  | View existing data   |
+| U    | Update    | Change existing data |
+| D    | Delete    | Remove data          |
+
+Examples:
+
+* Instagram post → Create
+* View profile → Retrieve
+* Edit profile → Update
+* Delete post → Delete
+
+## 5. Websites and HTTP Methods
+
+Websites use HTTP requests to communicate.
+
+| CRUD     | HTTP Method | Meaning              |
+| -------- | ----------- | -------------------- |
+| Create   | POST        | Send data to server  |
+| Retrieve | GET         | Get data from server |
+| Update   | PUT         | Change existing data |
+| Delete   | DELETE      | Remove data          |
+
+These methods tell the server what operation to perform.
+
+## 6. Our First Endpoint – View All Patients
+
+### Step 1: JSON File
+
+`patients.json` stores dummy patient records.
+
+### Step 2: Helper Function
+
+A function `load_data()` will:
+
+* Open `patients.json`
+* Read data
+* Return patient records
+
+### Step 3: Create GET Endpoint `/view`
+
+When someone visits `/view`:
+
+* API loads data from JSON file
+* Returns all patient records
+
+This is our Retrieve (GET) operation.
+
+## 7. Running the App
+
+Start the server using:
+
+```
+uvicorn main:app --reload
+```
+
+Then open:
+
+```
+http://127.0.0.1:8000/view
+```
+
+This shows all patient data.
+
+Open docs at:
+
+```
+http://127.0.0.1:8000/docs
+```
+
+Test API using auto-generated documentation.
+
+## 8. Summary of Video 3
+
+You learned:
+
+* Project idea (Patient Management System)
+* Meaning and importance of CRUD
+* HTTP methods: GET, POST, PUT, DELETE
+* CRUD and HTTP mapping
+* Created first API endpoint for viewing data
+* Loaded patient data from JSON file
+
+
