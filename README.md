@@ -491,3 +491,215 @@ You learned:
 * Loaded patient data from JSON file
 
 
+# FastAPI – Video 4 Notes
+
+## What We Will Learn
+
+In this video, we continue our FastAPI project and learn two very important concepts:
+
+* **Path Parameters**
+* **Query Parameters**
+
+Both are used to send information to an API using the URL, but they serve different purposes.
+
+---
+
+## 1. Path Parameters
+
+### What are Path Parameters?
+
+Path parameters are dynamic parts of a URL that help us identify a specific resource.
+
+**Example from last video:**
+
+```
+http://localhost:8000/view
+```
+
+This showed all patients.
+
+To get only one specific patient:
+
+```
+http://localhost:8000/patient/P003
+```
+
+Here:
+
+* `patient` → endpoint name
+* `P003` → path parameter (patient ID)
+
+### When to Use Path Parameters?
+
+Use them when you want to:
+✔ View one specific object
+✔ Update one specific object
+✔ Delete one specific object
+
+**Examples in real apps:**
+
+| App       | Path Parameter Example |
+| --------- | ---------------------- |
+| Instagram | /profile/rahul         |
+| Zomato    | /order/12345           |
+
+### Path Parameter in Code
+
+```python
+@app.get("/patient/{patient_id}")
+def view_patient(patient_id: str):
+```
+
+`{patient_id}` is the path parameter. The user must provide it.
+
+If patient exists → return details
+If not → return an error
+
+### Improving Path Parameters
+
+FastAPI provides a function called **Path()** to:
+✔ Add description
+✔ Add example values
+✔ Add constraints
+
+```python
+patient_id: str = Path(..., description="ID of the patient", example="P01")
+```
+
+This improves the API documentation.
+
+---
+
+## HTTP Status Codes
+
+Every server response contains a 3-digit status code.
+
+**Ranges:**
+
+| Code Range | Meaning      |
+| ---------- | ------------ |
+| 2xx        | Success      |
+| 3xx        | Redirection  |
+| 4xx        | Client error |
+| 5xx        | Server error |
+
+**Common Codes:**
+
+| Code | Meaning             |
+| ---- | ------------------- |
+| 200  | Request successful  |
+| 201  | Resource created    |
+| 204  | Success but no data |
+| 400  | Bad request         |
+| 401  | Unauthorized        |
+| 403  | Forbidden           |
+| 404  | Resource not found  |
+| 500  | Server error        |
+
+**Fixing Response Code Issue**
+Earlier, even if patient did not exist, API returned `200`.
+
+We corrected it:
+
+```python
+raise HTTPException(status_code=404, detail="Patient not found")
+```
+
+Now it returns the correct `404`.
+
+---
+
+## 2. Query Parameters
+
+### What are Query Parameters?
+
+These are extra details added after the main URL.
+Used for search, sorting, filtering, pagination.
+
+Format:
+
+```
+/endpoint?key=value&key2=value2
+```
+
+**Example:**
+
+```
+/sort?sort_by=height&order=descending
+```
+
+| Parameter | Meaning                          |
+| --------- | -------------------------------- |
+| sort_by   | field to sort on (height/weight) |
+| order     | ascending or descending          |
+
+### Why Query Parameters?
+
+They allow features without making new endpoints.
+
+Use cases:
+✔ Sort data
+✔ Filter data
+✔ Search data
+✔ Limit records
+
+### Query Parameter in Code
+
+```python
+@app.get("/sort")
+def sort_patients(
+    sort_by: str = Query(...),
+    order: str = Query("ascending")
+):
+```
+
+* `sort_by` is required (because of `...`)
+* `order` is optional, default is `ascending`
+
+We validated:
+
+```python
+valid_fields = ["height", "weight", "BMI"]
+if sort_by not in valid_fields:
+    raise HTTPException(400, "Invalid field")
+```
+
+### Example Outputs
+
+```
+/sort?sort_by=height&order=descending
+```
+
+→ Patients sorted from tallest to shortest
+
+If order is missing:
+
+```
+/sort?sort_by=weight
+```
+
+→ Sorted in ascending order by default
+
+---
+
+## Summary
+
+| Feature   | Path Parameter             | Query Parameter        |
+| --------- | -------------------------- | ---------------------- |
+| Purpose   | Identify a specific entity | Add filters/options    |
+| Required? | Yes                        | Optional               |
+| Location  | URL path                   | After `?` in URL       |
+| Example   | /patient/P01               | /sort?order=descending |
+
+---
+
+## Final Takeaway
+
+In this video, you learned:
+✔ What Path Parameters are and how to use them
+✔ What Query Parameters are and when to use them
+✔ How to improve API documentation using `Path()` and `Query()`
+✔ How to use `HTTPException` and return correct status codes
+✔ How to build endpoints using both Path and Query Parameters
+
+
