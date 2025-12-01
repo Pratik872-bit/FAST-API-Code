@@ -682,6 +682,106 @@ If order is missing:
 
 ---
 
+### Example 
+# FastAPI – Sorting Patients Endpoint
+
+## 📌 What is This Endpoint?
+
+This API endpoint allows you to sort patient data based on **height**, **weight**, or **BMI**. You can also choose the sorting order — either **ascending** or **descending**.
+
+This is useful when doctors or system users want to quickly view patients in a particular order, such as tallest to shortest, lowest BMI to highest, etc.
+
+---
+
+## 🧠 How It Works
+
+The `/sort` endpoint accepts two query parameters:
+
+| Parameter | Type | Required | Description                                    |
+| --------- | ---- | -------- | ---------------------------------------------- |
+| `sort_by` | str  | Yes      | Field to sort by: `height`, `weight`, or `bmi` |
+| `order`   | str  | No       | Sorting order: `asc` (default) or `desc`       |
+
+Example usage:
+
+```
+http://localhost:8000/sort?sort_by=height
+http://localhost:8000/sort?sort_by=bmi&order=desc
+```
+
+---
+
+## 📝 Code for Sorting Patients
+
+```python
+@app.get('/sort')
+def sorted_patients(sort_by:str=Query(...,description='sort on the basis of height and weight or bmi'),order:str=Query('asc',description='sort in desc order')):
+    valid_fileds=['height','weight','bmi']
+    if sort_by not in valid_fileds:
+        raise HTTPException(status_code=404,detail=f'Invalid filed select from {valid_fileds}')
+    if order not in ['asc','desc']:
+        raise HTTPException(status_code=404,detail='invalid order select between asc and desc')
+    data=load_data()
+    sort_order=True if order=='desc' else False
+    sorted_data=sorted(data.values(),key=lambda x:x.get(sort_by,0),reverse=sort_order)
+    return sorted_data
+```
+
+---
+
+## 🔍 Code Explanation (Simple English)
+
+### 1️⃣ Route Definition
+
+```python
+@app.get('/sort')
+```
+
+This creates a GET endpoint at `/sort`.
+
+### 2️⃣ Query Parameters
+
+```python
+sort_by: str = Query(...)
+order: str = Query('asc')
+```
+
+* `sort_by` is mandatory — you **must** choose one attribute.
+* `order` is optional — if not given, it defaults to `asc`.
+
+### 3️⃣ Validations
+
+```python
+valid_fileds=['height','weight','bmi']
+```
+
+The API checks if the `sort_by` value is valid. If not, it returns a **404 error**.
+
+### 4️⃣ Loading Data
+
+```python
+data = load_data()
+```
+
+Fetches patient data stored in memory or a file.
+
+### 5️⃣ Sorting Logic
+
+```python
+sorted_data = sorted(data.values(), key=lambda x: x.get(sort_by,0), reverse=sort_order)
+```
+
+* Uses Python's `sorted()` function.
+* Sorts based on the field mentioned in `sort_by`.
+* If `order` is `desc`, it sorts in reverse.
+
+### 6️⃣ Return Output
+
+The API returns a list of sorted patient records in JSON format.
+
+---
+
+
 ## Summary
 
 | Feature   | Path Parameter             | Query Parameter        |
