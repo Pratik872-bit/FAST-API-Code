@@ -1,0 +1,83 @@
+import json #package who help to load the json data 
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
+app=FastAPI()
+from pydantic import BaseModel,Field, computed_field
+from typing import Annotated,Literal
+
+class Patient(BaseModel):
+    id:Annotated[str,Field(...,description='ID of the patient',examples=['P001']) ]
+    name:Annotated[str,Field(...,description='name of the patient')]
+    city:Annotated[str,Field(...,description='city where the patient living')]
+    age:Annotated[int,Field(...,gt=0,lt=120,description='Age of the patient')]
+    gender:Annotated[Literal['male','female','others'],Field(...,description='gender if the patient')]
+    height:Annotated[float,Field(...,gt=0,description='height of the patientin mtrs')]
+    weight:Annotated[float,Field(...,gt=0,description='weight of the patient in kgs')]
+    
+    @computed_field
+    @property
+    def bmi(self)->float :
+        bmi=round(self.weight/(self.height**2),2)
+        return bmi
+    
+    @computed_field
+    @property
+    def verdict(self)->str :
+       if self.bmi <18.5:
+           return 'underweight'
+       elif self.bmi<25:
+           return 'normal'
+       elif self.bmi<30:
+           return 'normal'
+       else:
+           return 'obese'
+       
+    
+
+
+def load_data():
+    with open('patients.json','r') as f:  #this function will read the data from the patients file 
+        data=json.load(f)
+    return data
+
+def save_data(data):
+    with open('patients.json','w') as f:
+        json.dump(data,f)
+
+@app.get("/") # home route 
+def home():
+    return {"message":"Patients management system"} 
+
+@app.get("/about")
+def about():
+    return {"a fully functional api to manage patients"}
+
+
+@app.get("/view")
+def view():
+    data=load_data()# here the data will expose to this view route using load data function
+    
+    return data
+
+
+@app.post("/create")
+def create_patient(patient:Patient):
+    #loading data from the json file
+    data=load_data()
+    
+    #checking the user is already exists
+    if patient.id in data:
+        raise HTTPException(status_code=400,detail='patient already exists')
+    
+    #adding new user in the database
+    
+    data[patient.id]=patient.model_dump(exclude=['id'])
+    
+    #save into json file 
+    save_data(data)
+    return JSONResponse(status_code=201,content={'message':'patient created successfully'})
+    
+    
+    
+
+

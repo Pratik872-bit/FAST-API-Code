@@ -1023,3 +1023,195 @@ Without Pydantic you would manually:
 
 **Pydantic = Automatic validation + clean code + great docs**
 
+
+# 🚀 FastAPI – Patient Management System
+
+## Video 6 Notes: Update & Delete Endpoints
+
+We are building a CRUD API for a **Patient Management System**.
+
+### 📌 Progress So Far
+
+| Feature         | Status           |
+| --------------- | ---------------- |
+| CREATE (POST)   | ✔️ Done          |
+| RETRIEVE (GET)  | ✔️ Done          |
+| UPDATE (PUT)    | 🟡 In this video |
+| DELETE (DELETE) | 🟡 In this video |
+
+---
+
+## 🎯 Goal of This Video
+
+Implement two new endpoints:
+1️⃣ **/edit/{patient_id}** → Update details of an existing patient
+2️⃣ **/delete/{patient_id}** → Remove a patient from our database
+
+---
+
+## 🛠 Update Endpoint – How It Works
+
+### 📥 What will the client send?
+
+The client must send two things:
+
+| Type                | What it contains?                              |
+| ------------------- | ---------------------------------------------- |
+| Path Parameter      | Patient ID to update                           |
+| Request Body (JSON) | Updated values like new city, new weight, etc. |
+
+### ❓ Why do we need a NEW Pydantic Model?
+
+Our main Patient model requires **all fields**.
+But during update, the user may send **only a few fields**.
+Therefore, we create an **update model** where all fields are **optional**.
+
+---
+
+## 🧾 Update Pydantic Model
+
+```python
+from pydantic import BaseModel, Field
+from typing import Optional, Literal
+
+class PatientUpdate(BaseModel):
+    name: Optional[str] = Field(None)
+    city: Optional[str] = Field(None)
+    age: Optional[int] = Field(None)
+    gender: Optional[Literal["male", "female", "others"]] = Field(None)
+    height: Optional[float] = Field(None)
+    weight: Optional[float] = Field(None)
+```
+
+✔️ No `id` because patient ID comes from URL
+✔️ All fields optional → User may update **any single** field
+
+---
+
+## 🔧 Update Logic (Concept)
+
+| Step | Action                                             |
+| ---- | -------------------------------------------------- |
+| 1    | Load existing patients data                        |
+| 2    | Check if patient exists, else 404                  |
+| 3    | Convert incoming update to dictionary              |
+| 4    | Update only provided fields                        |
+| 5    | Recalculate BMI & Verdict if height/weight changed |
+| 6    | Save updated record                                |
+| 7    | Return success message                             |
+
+---
+
+## ✨ Update Endpoint Code
+
+```python
+from fastapi import HTTPException
+
+@app.put("/edit/{patient_id}")
+def update_patient(patient_id: str, patient_update: PatientUpdate):
+    data = load_data()
+
+    if patient_id not in data:
+        raise HTTPException(status_code=404, detail="Patient not found")
+
+    existing_info = data[patient_id]
+    updated_info = patient_update.model_dump(exclude_unset=True)
+
+    for key, value in updated_info.items():
+        existing_info[key] = value
+
+    existing_info["id"] = patient_id
+    patient_obj = Patient(**existing_info)
+
+    data[patient_id] = patient_obj.model_dump(exclude={"id"})
+    save_data(data)
+
+    return {"message": "Patient updated successfully"}
+```
+
+### 🧪 Testing Update API
+
+**Example Request:**
+
+```
+PUT /edit/P004
+{
+  "city": "Mumbai",
+  "weight": 90
+}
+```
+
+✔️ City updated → Bengaluru ➝ Mumbai
+✔️ Weight updated → BMI recalculated
+✔️ Verdict updated automatically
+
+---
+
+## 🗑 DELETE Endpoint – How It Works
+
+Only one input: **patient_id**
+
+### Steps
+
+1️⃣ Load data
+2️⃣ Check if ID exists
+3️⃣ Delete entry
+4️⃣ Save data
+5️⃣ Send confirmation
+
+---
+
+## ❌ Delete Endpoint Code
+
+```python
+from fastapi import HTTPException
+
+@app.delete("/delete/{patient_id}")
+def delete_patient(patient_id: str):
+    data = load_data()
+
+    if patient_id not in data:
+        raise HTTPException(status_code=404, detail="Patient not found")
+
+    del data[patient_id]
+    save_data(data)
+
+    return {"message": "Patient deleted successfully"}
+```
+
+### 🧪 Testing Delete API
+
+**Example:**
+
+```
+DELETE /delete/P006
+{
+  "message": "Patient deleted successfully"
+}
+```
+
+If patient doesn't exist:
+
+```
+{
+  "detail": "Patient not found"
+}
+```
+
+---
+
+## 🎉 Project Completed!
+
+We now support **full CRUD**:
+
+| Action   | Method | Endpoint                    |
+| -------- | ------ | --------------------------- |
+| Create   | POST   | /create                     |
+| Retrieve | GET    | /view, /patient/{id}, /sort |
+| Update   | PUT    | /edit/{id}                  |
+| Delete   | DELETE | /delete/{id}                |
+
+---
+
+✨ Your Patient API is now a complete CRUD system!
+
