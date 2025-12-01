@@ -361,7 +361,7 @@ You learned:
 ✔️ How auto-documentation works
 
 
-# FastAPI – Video 3 Notes (Simple English)
+# FastAPI – Video 3 Notes 
 
 ## 1. Project Begins
 
@@ -729,7 +729,7 @@ def sorted_patients(sort_by:str=Query(...,description='sort on the basis of heig
 
 ---
 
-## 🔍 Code Explanation (Simple English)
+## 🔍 Code Explanation 
 
 ### 1️⃣ Route Definition
 
@@ -802,4 +802,224 @@ In this video, you learned:
 ✔ How to use `HTTPException` and return correct status codes
 ✔ How to build endpoints using both Path and Query Parameters
 
+
+🚀 FastAPI Playlist – (Video 5)
+**Topic:** Create Endpoint (POST request + Request Body + Pydantic Model)
+
+---
+
+## 📌 What Have We Learned So Far?
+
+### Previous Videos Covered:
+
+| Video | Topic                                                                            |
+| ----- | -------------------------------------------------------------------------------- |
+| 1     | What are APIs? Why do we use them?                                               |
+| 2     | Fundamentals of FastAPI, strengths/weaknesses, comparison with Flask             |
+| 3     | Started project → Patient Management System                                      |
+| 4     | GET endpoints: view, patient/<id>, sort using Path Parameters & Query Parameters |
+
+### CRUD Progress
+
+✔️ Retrieve (GET) completed
+⏳ Create (POST) → covered in THIS video
+🔜 Next → Update & Delete
+
+---
+
+## 🎯 Goal of This Video
+
+Create a **POST endpoint** named `/create` that allows a client to add a new patient to our database stored in a **JSON file**.
+
+---
+
+## 🧠 Important Concept: Request Body
+
+**Definition:** The data sent by the client to the server inside an HTTP POST/PUT request.
+
+### Example request body JSON:
+
+```json
+{
+  "id": "P006",
+  "name": "Rahul Gupta",
+  "city": "Hyderabad",
+  "age": 19,
+  "gender": "male",
+  "height": 1.74,
+  "weight": 55
+}
+```
+
+➡️ The server will use this data to create a new patient.
+
+---
+
+## 🧰 Tech Used Behind The Scenes
+
+| Library       | Purpose                               |
+| ------------- | ------------------------------------- |
+| **Starlette** | ASGI framework, routing               |
+| **Pydantic**  | Data validation & settings management |
+
+📌 If you don’t understand Pydantic, the Create API won't make sense.
+
+---
+
+## 🏗️ Step-by-Step Process of Create Endpoint
+
+| Step | Description                                   |
+| ---- | --------------------------------------------- |
+| 1    | Client sends a POST request with patient data |
+| 2    | Server validates data using Pydantic Model    |
+| 3    | If valid → add new patient to JSON database   |
+| 4    | Return success message                        |
+
+---
+
+## 🔑 Step 1: Creating the Pydantic Model
+
+### Install Pydantic (if not installed)
+
+```bash
+pip install pydantic
+```
+
+### Patient Model with Validations + Computed Fields
+
+```python
+from pydantic import BaseModel, Field, computed_field
+from typing import Annotated, Literal
+
+class Patient(BaseModel):
+    id: Annotated[str, Field(description="Patient ID", examples=["P01"])]
+    name: Annotated[str, Field(description="Name of the patient")]
+    city: Annotated[str, Field(description="City where patient lives")]
+    age: Annotated[int, Field(gt=0, lt=120, description="Age of the patient")]
+    gender: Annotated[Literal["male", "female", "others"], Field(description="Gender of the patient")]
+    height: Annotated[float, Field(gt=0, description="Height in meters")]
+    weight: Annotated[float, Field(gt=0, description="Weight in kg")]
+
+    @computed_field
+    def bmi(self) -> float:
+        return round(self.weight / (self.height ** 2), 2)
+
+    @computed_field
+    def verdict(self) -> str:
+        if self.bmi < 18.5:
+            return "Underweight"
+        elif self.bmi < 25:
+            return "Normal"
+        elif self.bmi < 30:
+            return "Overweight"
+        return "Obese"
+```
+
+✔️ `bmi` and `verdict` are computed automatically
+❌ Client does NOT send them
+
+---
+
+## 📂 Step 2: Create Endpoint
+
+### `POST /create` → adds new patient
+
+```python
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
+import json
+
+app = FastAPI()
+
+def load_data():
+    with open("patients.json") as f:
+        return json.load(f)
+
+def save_data(data):
+    with open("patients.json", "w") as f:
+        json.dump(data, f, indent=4)
+
+@app.post("/create")
+def create_patient(patient: Patient):
+    data = load_data()
+
+    # Check if patient already exists
+    if patient.id in data:
+        raise HTTPException(status_code=400, detail="Patient already exists")
+
+    # Convert model to dict & add to DB
+    data[patient.id] = patient.model_dump(exclude={"id"})
+    save_data(data)
+
+    return JSONResponse(
+        status_code=201,
+        content={"message": "Patient created successfully"}
+    )
+```
+
+---
+
+## 🧪 Testing the Endpoint
+
+### Run the FastAPI app:
+
+```bash
+uvicorn main:app --reload
+```
+
+### Visit Swagger Docs:
+
+```
+http://localhost:8000/docs
+```
+
+Use the UI → enter patient data → click **Execute**
+
+💡 FastAPI auto-shows model rules & examples in docs!
+
+---
+
+## 🎉 Output Example
+
+After adding a new patient:
+
+```json
+{
+  "P006": {
+    "name": "Rahul Gupta",
+    "city": "Hyderabad",
+    "age": 19,
+    "gender": "male",
+    "height": 1.74,
+    "weight": 55,
+    "bmi": 18.17,
+    "verdict": "Underweight"
+  }
+}
+```
+
+---
+
+## 🏁 Summary
+
+| Feature             | Status        |
+| ------------------- | ------------- |
+| GET View Patients   | ✔️ Done       |
+| GET Patient by ID   | ✔️ Done       |
+| GET Sorted Patients | ✔️ Done       |
+| POST Create Patient | ✅ Completed   |
+| PUT Update Patient  | ⏳ Next Video  |
+| DELETE Patient      | ⏳ Coming Soon |
+
+---
+
+## 👍 Why Pydantic Makes Life Easy
+
+Without Pydantic you would manually:
+❌ Check age ≥ 0
+❌ Restrict gender values
+❌ Calculate BMI & verdict
+❌ Validate request body
+
+**Pydantic = Automatic validation + clean code + great docs**
 
