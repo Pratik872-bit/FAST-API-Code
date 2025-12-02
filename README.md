@@ -1215,3 +1215,246 @@ We now support **full CRUD**:
 
 ✨ Your Patient API is now a complete CRUD system!
 
+
+# 🚀 FastAPI + Machine Learning Model Serving (Video 7)
+
+## Previous Progress
+
+We have successfully created a **Patient Management System API** using FastAPI and completed these CRUD features:
+
+| Feature  | Status  |
+| -------- | ------- |
+| Create   | ✔️ Done |
+| Retrieve | ✔️ Done |
+| Update   | ✔️ Done |
+| Delete   | ✔️ Done |
+
+---
+
+## 🎯 New Goal
+
+Now, we are moving into the next phase:
+
+**Serve a Machine Learning model using FastAPI** so users can send input data and receive predictions.
+
+---
+
+## 📌 Why Do We Need This?
+
+* Data scientists train ML models inside **Jupyter Notebooks**, but users cannot access them directly.
+* We need an **API** so users can send data from apps/websites and get predictions.
+
+FastAPI helps us:
+✔️ Load the ML model
+✔️ Validate input
+✔️ Run prediction
+✔️ Return output as JSON
+✔️ Connect frontend UI
+
+---
+
+## 🧭 Flow of the System
+
+```
+User → Frontend → FastAPI → ML Model → Prediction → FastAPI → Frontend → User
+```
+
+### Process Breakdown
+
+| Part   | Description                    |
+| ------ | ------------------------------ |
+| Part 1 | Build Machine Learning Model   |
+| Part 2 | Create API Endpoint in FastAPI |
+| Part 3 | Build Frontend using Streamlit |
+
+---
+
+## 🧱 PART 1: Building the Machine Learning Model
+
+### Problem Statement
+
+Predict **Insurance Premium Category**:
+
+* Categories → `Low`, `Medium`, `High`
+
+### Based On These Features
+
+| Feature      | Meaning          |
+| ------------ | ---------------- |
+| Age          | Age of user      |
+| Weight       | Body weight      |
+| Height       | Height in meters |
+| Income (LPA) | Annual income    |
+| Smoker       | True/False       |
+| City         | User's city      |
+| Occupation   | Job type         |
+
+### Why Predict Premium Category?
+
+* Insurance companies understand **customer risk**
+* Users know whether they will pay **high or low** premium
+
+---
+
+## 🧪 Feature Engineering
+
+We transformed raw inputs into useful features.
+
+| New Feature    | Based On        | Purpose            |
+| -------------- | --------------- | ------------------ |
+| Age Group      | Age             | Categorize users   |
+| BMI            | Weight & Height | Body Fat Indicator |
+| Lifestyle Risk | BMI + Smoker    | Risk score         |
+| City Tier      | City            | Tier-1/2/3 cities  |
+
+### BMI Formula
+
+```
+bmi = weight / (height ** 2)
+```
+
+### Pandas Example
+
+```python
+df['BMI'] = df['weight'] / (df['height'] ** 2)
+```
+
+### Lifestyle Risk Logic
+
+```python
+if smoker and bmi > 30:
+    risk = 'High'
+elif smoker and bmi > 27:
+    risk = 'Medium'
+else:
+    risk = 'Low'
+```
+
+---
+
+## 🤖 ML Pipeline
+
+We used **RandomForestClassifier** with **ColumnTransformer**.
+
+```python
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.pipeline import Pipeline
+from sklearn.ensemble import RandomForestClassifier
+
+pipeline = Pipeline([
+    ('transformer', ColumnTransformer(...)),
+    ('model', RandomForestClassifier())
+])
+```
+
+### Save Model with Pickle
+
+```python
+import pickle
+pickle.dump(pipeline, open('model.pkl', 'wb'))
+```
+
+File created: **model.pkl**
+
+---
+
+## 🔁 PART 2: FastAPI Prediction API
+
+### Step 1 → Load Model
+
+```python
+import pickle
+with open("model.pkl", "rb") as f:
+    model = pickle.load(f)
+```
+
+### Step 2 → Create App
+
+```python
+from fastapi import FastAPI
+app = FastAPI()
+```
+
+### Step 3 → Define Input Schema
+
+```python
+from pydantic import BaseModel, Field
+from typing import Annotated, Literal
+
+class UserInput(BaseModel):
+    age: Annotated[int, Field(gt=0, le=120)]
+    weight: float
+    height: float
+    income_lpa: float
+    smoker: bool
+    city: str
+    occupation: Literal['Government Job', 'Business Owner', 'Private Job']
+```
+
+### Step 4 → Predict Endpoint
+
+```python
+@app.post("/predict")
+def predict_premium(data: UserInput):
+    input_df = pd.DataFrame([{
+        "BMI": data.bmi,
+        "age_group": data.age_group,
+        "lifestyle_risk": data.lifestyle_risk,
+        "city_tier": data.city_tier,
+        "income_lpa": data.income_lpa,
+        "occupation": data.occupation
+    }])
+
+    prediction = model.predict(input_df)[0]
+
+    return {"predicted_category": prediction}
+```
+
+📌 **HTTP Method** = `POST`
+
+---
+
+## 🖥 PART 3: Streamlit Frontend
+
+Install dependencies:
+
+```bash
+pip install streamlit requests
+```
+
+### Basic UI Code
+
+```python
+import streamlit as st
+import requests
+
+st.title("Insurance Premium Predictor")
+
+age = st.number_input("Age", min_value=0, max_value=120)
+# ... more fields ...
+
+if st.button("Predict Premium Category"):
+    data = {...}
+    response = requests.post("http://localhost:8000/predict", json=data)
+    st.write(response.json())
+```
+
+Run:
+
+```bash
+streamlit run front.py
+```
+
+---
+
+## 🎉 Summary
+
+You learned how to:
+✔️ Build an ML model
+✔️ Export and save it
+✔️ Serve it with FastAPI
+✔️ Connect Streamlit to consume predictions
+
+This is exactly how **real-world ML deployment** works! 🚀
+
